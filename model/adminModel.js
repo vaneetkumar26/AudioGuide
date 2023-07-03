@@ -21,7 +21,14 @@ const adminModel = new mongoose.Schema({
         type: String,
 
     },
-
+    otp:{
+        type: Number,
+    },
+    otp_verified:{
+      type:Boolean,
+      enum: [true, false],
+      default: false,
+    }
 
 
 }, { timestamps: true })

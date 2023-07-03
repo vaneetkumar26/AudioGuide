@@ -10,7 +10,7 @@ const userFeedbackModel=require("../model/userFeedbackModel")
 const Joi = require("joi");
 const Helper= require("../helper/validation")
 const _ = require("underscore");
-
+const SendOtp=require("../middleware/sendOtp")
 class adminController {
     adminLogin = async (req, res, next) => {
         try {
@@ -22,6 +22,7 @@ class adminController {
                 })
             } else {
                 const admin = await adminModel.findOne({ email: email });
+                const adminDetail = await adminModel.findOne({ email: email },{password:0});
 
                 if (!admin) {
 
@@ -43,6 +44,7 @@ class adminController {
                         status: true,
                         message: "Admin logged in successfully",
                         token: token,
+                        adminDetail:adminDetail
                     })
                 }
 
@@ -65,6 +67,8 @@ class adminController {
     updateAdminProfile = async (req, res, next) => {
         try {
             const { name, email } = req.body;
+            console.log("image",req.file)
+            console.log("image 1",req.file.location)
             const adminfiled = await adminModel.findOne({ _id: req.user._id });
             const updateProfile = await adminModel.findByIdAndUpdate({ _id: req.user._id }, {
                 $set: {
@@ -156,6 +160,8 @@ class adminController {
     AddcarouselImage = async (req, res, next) => {
         try {
             const { title } = req.body;
+            console.log("tests",title) 
+            console.log("object",req.file)
             const carousel = await carouselModel.create({
                 title: title,
                 image: req.file.location,
@@ -180,11 +186,16 @@ class adminController {
     //****************************************************************************************************************************/
     fetchCarouselImage = async (req, res, next) => {
         try {
-            const carousel = await carouselModel.find()
+          const { limit, skip } = req.query;
+           let skips=req.query.skip?req.query.skip:0;
+           let limits=req.query.limit?req.query.limit:10;
+            const count = await carouselModel.countDocuments();
+            const carousel = await carouselModel.find().limit(parseInt(limits)).skip(parseInt(skips)*(parseInt(limits)))
             return res.status(200).json({
                 status: true,
                 message: "Carousel image fetch successfully",
                 response: carousel,
+                count:count
             })
         } catch (err) {
             return res.status(401).json({
@@ -353,11 +364,16 @@ class adminController {
     //****************************************************************************************************************************/
     fetchPromoCode = async (req, res, next) => {
         try {
-            const fetchCode = await promoCodeModel.find();
+          const { limit, skip } = req.query;
+            let skips=req.query.skip?req.query.skip:0;
+            let limits=req.query.limit?req.query.limit:10;
+            const count=await promoCodeModel.countDocuments();
+            const fetchCode = await promoCodeModel.find().limit(parseInt(limits)).skip(parseInt(skips)*(parseInt(limits)));
             return res.status(401).json({
                 status: true,
                 message: "Promocode fetch successfully",
                 response: fetchCode,
+                count:count
             })
         } catch (err) {
             return res.status(401).json({
@@ -574,15 +590,17 @@ class adminController {
     updateTourPrice=async(req,res,next)=>{
         try {
     
-            let criteria={
-                _id:req.body._id
-            }
-           let data={
-            $set:{
-                price:req.body.price
-            }
-           }
-           await tourBuyModel.findOneAndUpdate(criteria,data)
+        //     let criteria={
+        //         _id:req.body._id
+        //     }
+        //    let data={
+        //     $set:{
+        //         price:req.body.price
+        //     }
+        //    }
+           await tourBuyModel.findOneAndUpdate({_id:req.body._id},{ $set:{
+            price:req.body.price
+        }})
             return res.status(200).json({
                 status: true,
                 message: "Tour price updated successfully",
@@ -695,12 +713,91 @@ class adminController {
             // const totalFeedbackGiveUser = await this.userFeedbackModel.countDocuments();
             const totalFeedbackGiveUserWithStatus1 = await userFeedbackModel.countDocuments({ status: 1 });
             const totalFeedbackGiveUserWithStatus0 = await userFeedbackModel.countDocuments({ status: 0 });
-        
+            const feedbackPerMonthStatus0 = await userFeedbackModel.aggregate([
+                {
+                  $match: {
+                    status: 0 // Filter documents where status is 0
+                  }
+                },
+                {
+                  $group: {
+                    _id: { $month: { $toDate: "$createdAt" } }, // Extract the month from the createdAt field
+                    count: { $sum: 1 } // Sum the stars for each month
+                  }
+                },
+                {
+                  $sort: {
+                    _id: 1 // Sort by month in ascending order
+                  }
+                }
+              ]);
+              const feedbackPerMonthStatus1 = await userFeedbackModel.aggregate([
+                {
+                  $match: {
+                    status: 1 // Filter documents where status is 0
+                  }
+                },
+                {
+                  $group: {
+                    _id: { $month: { $toDate: "$createdAt" } }, // Extract the month from the createdAt field
+                    count: { $sum: 1 } // Sum the stars for each month
+                  }
+                },
+                {
+                  $sort: {
+                    _id: 1 // Sort by month in ascending order
+                  }
+                }
+              ]);
+
+              const feedbackPerDayStatus0 = await userFeedbackModel.aggregate([
+                {
+                  $match: {
+                    status: 0 // Filter documents where status is 0
+                  }
+                },
+                {
+                  $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, // Extract the date in the format YYYY-MM-DD from the createdAt field
+                    count: { $sum: 1 } // Sum the stars for each day
+                  }
+                },
+                {
+                  $sort: {
+                    _id: 1 // Sort by day in ascending order
+                  }
+                }
+              ]);
+              const feedbackPerDayStatus1 = await userFeedbackModel.aggregate([
+                {
+                  $match: {
+                    status: 1 // Filter documents where status is 1
+                  }
+                },
+                {
+                  $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, // Extract the date in the format YYYY-MM-DD from the createdAt field
+                    count: { $sum: 1 } // Sum the stars for each day
+                  }
+                },
+                {
+                  $sort: {
+                    _id: 1 // Sort by day in ascending order
+                  }
+                }
+              ]);
+              
+
             return res.status(401).json({
                 status: true,
                 message: "List of total user feedback give",
+                total:totalFeedbackGiveUserWithStatus1+totalFeedbackGiveUserWithStatus0,
                 totalFeedbackGiveUserWithStatus1: totalFeedbackGiveUserWithStatus1,
-                totalFeedbackGiveUserWithStatus0:totalFeedbackGiveUserWithStatus0
+                totalFeedbackGiveUserWithStatus0:totalFeedbackGiveUserWithStatus0,
+                feedbackPerMonthStatus0:feedbackPerMonthStatus0,
+                feedbackPerMonthStatus1:feedbackPerMonthStatus1,
+                feedbackPerDayStatus0:feedbackPerDayStatus0,
+                feedbackPerDayStatus1:feedbackPerDayStatus1
             })
         } catch (err) {
             return res.status(401).json({
@@ -797,53 +894,87 @@ class adminController {
         }
     }
     fragementFeedback = async (req, res, next) => {
-        try {
+      try {
+          const { limit, skip } = req.query;
+        let skips=req.query.skip?req.query.skip:0
+         let limits=req.query.limit?req.query.limit:10;
+         skips=parseInt(skips)*parseInt(limits)
+          const skipValue = parseInt(skips) || 0;
+          const limitValue = parseInt(limits) || 10;
+  
           const carousel = await userFeedbackModel.aggregate([
+              {
+                  $match: {
+                      rating: { $exists: true }
+                  }
+              },
+              {
+                  $lookup: {
+                      from: 'places', // Name of the place collection
+                      localField: 'placeId',
+                      foreignField: '_id',
+                      as: 'placeData'
+                  }
+              },
+              {
+                  $addFields: {
+                      placeData: { $arrayElemAt: ['$placeData', 0] }
+                  }
+              },
+              {
+                  $project: {
+                      _id: 1,
+                      placeId: 1,
+                      rating: 1,
+                      ratingNote: 1,
+                      placeName: '$placeData.title',
+                      fragment: '$placeData.fragment'
+                  }
+              },
+              {
+                  $skip: skipValue
+              },
+              {
+                  $limit: limitValue
+              }
+          ]);
+          const counts = await userFeedbackModel.aggregate([
             {
               $match: {
                 rating: { $exists: true }
               }
             },
             {
-              $lookup: {
-                from: 'places', // Name of the place collection
-                localField: 'placeId',
-                foreignField: '_id',
-                as: 'placeData'
-              }
-            },
-            {
-              $addFields: {
-                placeData: { $arrayElemAt: ['$placeData', 0] }
-              }
-            },
-            {
-              $project: {
-                _id: 1,
-                placeId: 1,
-                rating: 1,
-                ratingNote: 1,
-                placeName: '$placeData.title',
-                fragment: '$placeData.fragment'
+              $group: {
+                _id: null,
+                count: { $sum: 1 }
               }
             }
           ]);
-      
+          
+          const count = counts.length > 0 ? counts[0].count : 0;
           return res.status(200).json({
-            status: true,
-            message: 'List of feedback',
-            response: carousel
+              status: true,
+              message: 'List of feedback',
+              response: carousel,
+              count:count
           });
-        } catch (err) {
+      } catch (err) {
           return res.status(401).json({
-            status: false,
-            message: err.message,
-            stack: err.stack
+              status: false,
+              message: err.message,
+              stack: err.stack
           });
-        }
-    };  
+      }
+  };
+  
     fragementFavourite=async (req, res, next) => {
         try {
+          const { limit, skip } = req.query;
+         let skips=req.query.skip?req.query.skip:0;
+         let limits=req.query.limit?req.query.limit:10;
+          const skipValue = parseInt(skips)*parseInt(limits) || 0;
+          const limitValue = parseInt(limits) || 10;
           const Favourite = await userFeedbackModel.aggregate([
             {
                 $match: {
@@ -871,8 +1002,30 @@ class adminController {
                 placeName: '$placeData.title',
                 image: '$placeData.image'
               }
+            },
+            {
+              $skip: skipValue
+          },
+          {
+              $limit: limitValue
+          },
+          ]);
+          const counts = await userFeedbackModel.aggregate([
+            {
+              $match: {
+                placeId: { $exists: true }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                count: { $sum: 1 }
+              }
             }
           ]);
+          
+          const count = counts.length > 0 ? counts[0].count : 0;
+          
           const ListFavourite = await userFeedbackModel.aggregate([
             {
                 $match: {
@@ -900,14 +1053,40 @@ class adminController {
                 placeName: '$placeData.title',
                 image: '$placeData.image'
               }
+            },
+            {
+              $skip: skipValue
+          },
+          {
+              $limit: limitValue
+          },
+         
+          
+          ]);
+         
+          const listcounts = await userFeedbackModel.aggregate([
+            {
+              $match: {
+                leastplaceId: { $exists: true }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                count: { $sum: 1 }
+              }
             }
           ]);
-      
+          console.log("object",listcounts)
+          const listcount = listcounts.length > 0 ? listcounts[0].count : 0;
+
           return res.status(200).json({
             status: true,
             message: 'List of feedback',
             MostFavourite: Favourite,
-            ListFavourite:ListFavourite
+            MostFavouriteCount:count,
+            ListFavourite:ListFavourite,
+            ListFavouriteCount:listcount
           });
         } catch (err) {
           return res.status(401).json({
@@ -917,7 +1096,157 @@ class adminController {
           });
         }
     };
+
+    forgotPassword = async (req, res) => {
+        try {
+          const { email } = req.body;
+          const user = await adminModel.findOne({ email: email });
+          if (!user) {
+            return res.status(401).json({
+              status: false,
+              message: "Email does not exist",
+            });
+          }
+          const otp = Math.floor(1000 + Math.random() * 9000);
+          await adminModel.updateOne(
+            { email: email },
+            {
+              $set: {
+                otp: otp,
+              },
+            }
+          );
+          SendOtp(email, otp, user.name);
+          let admin=await adminModel.findOne({ email: email });
+          return res.status(201).json({
+            status: true,
+            message: "Otp has been sent to your email, Please check your email",
+            response: admin,
+          });
+        } catch (error) {
+          return res.status(401).json({
+            status: false,
+            message: error.message,
+          });
+        }
+      };
+    resendOtp = async (req, res, next) => {
+        try {
+          const { email } = req.body;
+          const otp = Math.floor(1000 + Math.random() * 9000);
+          const setemail = await adminModel.findOneAndUpdate(
+            { email: email },
+            {
+              $set: {
+                otp: otp,
+              },
+            }, { new: true }
+          );
+          SendOtp(email, otp, setemail.investorName);
+          return res.status(201).json({
+            status: true,
+            message: "Otp has been resent to your email, Please check your email",
+            response: setemail,
+          });
+      
+        } catch (err) {
+          return res.status(401).json({
+            status: false,
+            message: err.message,
+            stack: err.stack,
+          })
+        }
+      }
+    verifyotp = async (req, res) => {
+        try {
+          const { email, otp } = req.body;
+          const checkemail = await adminModel.findOne({ email: email });
+          console.log("checkemail",checkemail)
+          console.log("otp",otp)
+          if (checkemail.otp != otp) {
+            return res.status(401).json({
+              status: false,
+              message: "Otp doesn't match",
+            });
+          } else {
+            await adminModel.updateOne(
+              { email: email },
+              {
+                $set: { otp_verified: true },
+              },
+              { new: true }
+            );
+            const checkotp = await adminModel.findOne({ email: email });
+            return res.status(200).json({
+              status: true,
+              message: "Otp verified successfully",
+              response: checkotp,
+            });
+          }
+        } catch (err) {
+          return res.status(401).json({
+            status: false,
+            message: err.message,
+          });
+        }
+      };  
+    setPassword = async (req, res) => {
+        const { password, password_confirmation, email } = req.body
+        console.log(req.body);
+        try {
+              const checkotpVerify = await adminModel.findOne({ email: email });
+              if(checkotpVerify.otp_verified===true){
+                const salt = await bcrypt.genSalt(10)
+                const newHashPassword = await bcrypt.hash(password, salt)
+                if (password === password_confirmation) {
+                  const saved_user = await adminModel.findOneAndUpdate({ email: email }, { $set: { password: newHashPassword } })
+                  const otp_verified = await adminModel.findOneAndUpdate({ email: email }, { $set: {otp_verified : false } })
+                  if (saved_user) {
+                    res.status(200).send({ "success": true, "status": "200", "message": "Set Password succesfully" })
+                  } else {
+                    res.status(401).send({ "success": false, "status": "401", "message": "Something Went Wrongs" })
+                  }
+                } else {
+                  res.status(401).send({ "success": false, "status": "401", "message": "Password And password_confirmation don't Match " })
+                }
+              }else{
+                res.status(401).send({ "success": false, "status": "401", "message": "Please resend otp again" })
+              }
+        
+        } catch (error) {
+          res.status(401).send({ "success": false, "status": "401", "message": "Something Went Wrongs" })
+          console.log("error", error);
+        }
+      }
+      
+    fetchAllPlaces = async (req, res, next) => {
+        try {
+          const { limit, skip } = req.query;
+         let skips=req.query.skip?req.query.skip:0;
+          let limits=req.query.limit?req.query.limit:10;
+          console.log("limit",limits)
+          console.log("skip",skips)
+          console.log("cal",(parseInt(skips)*(parseInt(limits))))
+          const count=await placesModel.countDocuments();
+            const fetchplaces = await placesModel.find().limit(parseInt(limits)).skip(parseInt(skips)*(parseInt(limits)));
+            return res.status(200).json({
+                status: true,
+                message: "Places fetch successfully",
+                count:count,
+                response: fetchplaces,
+            })
+
+        } catch (err) {
+            return res.status(401).json({
+                status: false,
+                message: err.message,
+                stack: err.stack,
+            })
+        }
+    }
 }
+
+
 
 
 const AdminController = new adminController();

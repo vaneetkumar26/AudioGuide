@@ -35,7 +35,7 @@ adminRouter.post("/changeAdminPassword", checkAdminAuth, adminController.changeA
 adminRouter.get("/fetchAdminProfile", checkAdminAuth, adminController.fetchAdminProfile)
 
 adminRouter.post("/AddcarouselImage", checkAdminAuth, upload.single("file"), adminController.AddcarouselImage)
-adminRouter.get("/fetchCarouselImage", checkAdminAuth, adminController.fetchCarouselImage)
+adminRouter.get("/fetchCarouselImage", adminController.fetchCarouselImage)
 adminRouter.post("/updateCarousalImage", checkAdminAuth, upload.single("file"), adminController.updateCarousalImage)
 adminRouter.post("/fetchSingleCarouselImage", checkAdminAuth, adminController.fetchSingleCarouselImage)
 adminRouter.post("/deleteCarouselImage", checkAdminAuth, adminController.deleteCarouselImage)
@@ -46,6 +46,11 @@ adminRouter.post("/updatePromoCode", checkAdminAuth, adminController.updatePromo
 adminRouter.get("/fetchPromoCode", checkAdminAuth, adminController.fetchPromoCode)
 adminRouter.post("/deletePromoCode", checkAdminAuth, adminController.deletePromoCode)
 adminRouter.post("/fetchSinglePromoCode", checkAdminAuth, adminController.fetchSinglePromoCode)
+adminRouter.post("/forgotPassword",  adminController.forgotPassword)
+adminRouter.post("/resendOtp", adminController.resendOtp)
+adminRouter.post("/verifyotp", adminController.verifyotp)
+adminRouter.post("/setPassword",  adminController.setPassword)
+adminRouter.get("/adminfetchAllPlaces",  adminController.fetchAllPlaces)
 
 
 
@@ -83,7 +88,7 @@ adminRouter.delete("/deleteTourPrice", checkAdminAuth, adminController.deleteTou
 // Admin Dashboard api's Not live yet
 adminRouter.get('/dashboard/totalCustomer', checkAdminAuth,adminController.getTotalCustomerAndUserPerMonth);
 adminRouter.get('/dashboard/totalAppDownload', checkAdminAuth, adminController.getTotalAppDownloadUser);
-adminRouter.get('/dashboard/feebackStar', checkAdminAuth, adminController.feedbackStar);
+adminRouter.get('/dashboard/feebackStar', adminController.feedbackStar);
 adminRouter.get('/dashboard/totalSale', checkAdminAuth, adminController.totalSaleAndPerMonthDetail);
 
 

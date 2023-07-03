@@ -4,7 +4,7 @@ const userModel=require("../model/userModel")
 const userRoute = Router();
 userRoute.get("/fetchCarousel" , userController.fetchCarousel)
 userRoute.post("/metchPromoCode" , userController.metchPromoCode)
-userRoute.get("/fetchAllPlaces" , userController.fetchAllPlaces)
+userRoute.post("/fetchAllPlaces" , userController.fetchAllPlaces)
 userRoute.post("/getSinglePlaces" , userController.getSinglePlaces)
 userRoute.post("/feedbackAdd" , userController.addFeedback)
 userRoute.post("/ratingAdd" , userController.addRating)
@@ -15,7 +15,7 @@ userRoute.post("/payPayment" , userController.payment)
 userRoute.get("/paymentSuccess", async (req, res) => {
     try {
       const { token } = req.query;
-      await userModel.create(token)
+      await userModel.create({token:token,status:"Paid"}) 
       console.log("User token:", token);
       res.send(`
 <!DOCTYPE html>
@@ -95,6 +95,7 @@ userRoute.get("/paymentSuccess", async (req, res) => {
     }
   });
   
+// userRoute.get("/payment-success",userController.paymentSuccess)
 
 
 module.exports =  userRoute;

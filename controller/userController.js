@@ -8,6 +8,7 @@ const Joi=require("joi");
 const Helper=require("../helper/validation");
 const _ =require("underscore")
 var jwt = require('jsonwebtoken');
+
 const { createMollieClient } = require('@mollie/api-client');
 const mollieClient = createMollieClient({ apiKey: 'test_NH4xwqE8aWp6CV4n3tfFWseHMeswsN' });
 class userController {
@@ -37,10 +38,11 @@ class userController {
     //****************************************************************************************************************************/
     metchPromoCode = async (req, res, next) => {
         try {
-            const { promoCode } = req.body;
+            const { promoCode ,token} = req.body;
             const fetchcode = await promoCodeModel.find();
-            fetchcode.map((value) => {
+            fetchcode.map(async(value) => {
                 if (value.promoCode === promoCode) {
+                    await userModel.create({token:token,status:"PromoCode"})
                     return res.status(201).json({
                         status: true,
                         message: "Promo code metch successfully"
@@ -61,58 +63,60 @@ class userController {
     //   fetch All Places apis  //
     //****************************************************************************************************************************/
 
-    fetchAllPlaces = async (req, res, next) => {
-        try {
-
-            const fetchplaces = await placesModel.find();
-            return res.status(200).json({
-                status: true,
-                message: "Places fetch successfully",
-                response: fetchplaces,
-            })
-
-        } catch (err) {
-            return res.status(401).json({
-                status: false,
-                message: err.message,
-                stack: err.stack,
-            })
-        }
-    }
-
     // fetchAllPlaces = async (req, res, next) => {
     //     try {
-    //       const { token } = req.body;
-      
-    //       // Check if the userToken exists in the payment table
-    //       const paymentRecord = await userModel.findOne({ token });
-      
-    //       let fetchplaces;
-      
-    //       if (paymentRecord) {
-    //         // User token exists in payment table, return all records
-    //         fetchplaces = await placesModel.find();
-    //       } else {
-    //         // User token does not exist in payment table, return specific record
-    //         fetchplaces = await placesModel.find({
-    //           latitude: 51.0535,
-    //           longitude: 3.725442
-    //         });
-    //       }
-      
-    //       return res.status(200).json({
-    //         status: true,
-    //         message: "Places fetched successfully",
-    //         response: fetchplaces,
-    //       });
+
+    //         const fetchplaces = await placesModel.find();
+    //         return res.status(200).json({
+    //             status: true,
+    //             message: "Places fetch successfully",
+    //             response: fetchplaces,
+    //         })
+
     //     } catch (err) {
-    //       return res.status(401).json({
-    //         status: false,
-    //         message: err.message,
-    //         stack: err.stack,
-    //       });
+    //         return res.status(401).json({
+    //             status: false,
+    //             message: err.message,
+    //             stack: err.stack,
+    //         })
     //     }
-    //   };
+    // }
+
+    fetchAllPlaces = async (req, res, next) => {
+        try {
+          const { token } = req.body;
+      console.log("fetctAllToken===>",token)
+          // Check if the userToken exists in the payment table
+        //   const paymentRecord = await userModel.findOne({ token });
+          const paymentRecord = await userModel.findOne({ token, status: { $in: ["Paid", "PromoCode"] } });
+
+      console.log("PaymentRecord=====>",paymentRecord)
+          let fetchplaces;
+      
+          if (paymentRecord) {
+            // User token exists in payment table, return all records
+            fetchplaces = await placesModel.find();
+          } else {
+            // User token does not exist in payment table, return specific record
+            fetchplaces = await placesModel.find({
+              latitude: 51.0535,
+              longitude: 3.725442
+            });
+          }
+      
+          return res.status(200).json({
+            status: true,
+            message: "Places fetched successfully",
+            response: fetchplaces,
+          });
+        } catch (err) {
+          return res.status(401).json({
+            status: false,
+            message: err.message,
+            stack: err.stack,
+          });
+        }
+      };
       
     //*****************************************************************************************************************************/
     //   get Single Places apis  //
@@ -203,14 +207,18 @@ class userController {
     }
     autoPlayUpdateStatus=async(req,res,next)=>{
         try {
-          const query = {};
-          const update = { $set: { autoPlay: req.body.autoPlay } };
-          const output= await placesModel.updateMany(query, update)
+          const query = {token:req.body.token};
+        //   const update = { $set: { autoPlay: req.body.autoPlay } };
+          let {token}=req.body;
+          const findData=await userModel.findOne({token}).select("autoPlay")
+          console.log("findData",findData.autoPlay)
+          const update = { $set: { autoPlay: !findData.autoPlay } };
+          const output= await userModel.updateMany(query, update)
             console.log("output",output)
             return res.status(200).json({
                 status: true,
                 message: "Audio status update",
-
+                response:update.$set.autoPlay
             })
         } catch (error) {
             return res.status(401).json({
@@ -227,15 +235,16 @@ class userController {
         try {
             let molliePayment;
             const token=req.body.token;
+            // const token="abcersdfasfdsfdsfadsfrewr123453";
             console.log("This is token",token)
             const paymentData = {
-              amount: '10.00',
+              amount: '100.00',
               currency: 'EUR',
               description: 'Payment By AudioGuide',
               //for local
-            //   redirectUrl: 'http://localhost:8000/paymentSuccess', // Replace with your redirect URL 
+              redirectUrl: 'http://localhost:8000/paymentSuccess', // Replace with your redirect URL 
             // for live server 
-             redirectUrl:'http://18.119.138.104:8000/paymentSuccess'
+            //  redirectUrl:'http://18.119.138.104:8000/paymentSuccess'
             };
             // Create a payment in Mollie API
             molliePayment = await mollieClient.payments.create({
@@ -247,6 +256,10 @@ class userController {
               redirectUrl: paymentData.redirectUrl+`?token=${encodeURIComponent(token)}` ,
             });
         
+  // Log the created payment object for debugging
+  console.log('Mollie Payment:', molliePayment);  
+  console.log("payment.getCheckoutUrl()",molliePayment.getCheckoutUrl())
+
             // Redirect the user to Mollie checkout page
             // console.log("URL",molliePayment.links)
             // console.log("URL--------",molliePayment)
@@ -256,16 +269,9 @@ class userController {
             res.status(500).send('An error occurred during payment preparation.');
           }
     }
-    
+
 }
 
 
 const UserController = new userController();
 module.exports = UserController;
-
-// const admin = require('firebase-admin');
-
-// admin.initializeApp({
-//   credential: admin.credential.applicationDefault(),
-// });
-// const decodedToken = await admin.auth().verifyIdToken(deviceToken);
