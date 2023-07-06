@@ -35,7 +35,7 @@ const expirePromoCode = async (req, res, next) => {
     promoCodes.forEach(async (promoCode) => {
         const createdAt = new Date(promoCode.createdAt);
         const expirationDate = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000); // Add 24 hours to createdAt
-        if (currentDate >= expirationDate) {
+        if (currentDate >= expirationDate&& promoCode.promoCode !== "FEEDBACK") {
             const promoCodeexpire = await promoCodeModel.findByIdAndDelete({ _id: promoCode._id });
             console.log(`Coupon doesnt exists or expired`);
             // Promo code has expired
@@ -49,6 +49,10 @@ const expirePromoCode = async (req, res, next) => {
 cron.schedule("* * * * * *", async () => {
     await expirePromoCode();
 });
+
+// cron.schedule('*/1 * * * *', async () => {
+//     await expirePromoCode();
+//   });
 
 
 dbConnect();

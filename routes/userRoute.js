@@ -15,7 +15,12 @@ userRoute.post("/payPayment" , userController.payment)
 userRoute.get("/paymentSuccess", async (req, res) => {
     try {
       const { token } = req.query;
-      await userModel.create({token:token,status:"Paid"}) 
+      let data=await userModel.findOne({token})
+      if(!data){
+          await userModel.create({token:token,status:"Paid"})
+      }else{
+          await userModel.findOneAndUpdate({token:token},{status:"Paid"},{ new: true })
+      }
       console.log("User token:", token);
       res.send(`
 <!DOCTYPE html>

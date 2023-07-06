@@ -41,7 +41,7 @@ adminRouter.post("/fetchSingleCarouselImage", checkAdminAuth, adminController.fe
 adminRouter.post("/deleteCarouselImage", checkAdminAuth, adminController.deleteCarouselImage)
 
 adminRouter.post("/createPromoCode", checkAdminAuth, adminController.createPromoCode)
-adminRouter.post("/addPromoCode", checkAdminAuth, adminController.addPromoCode)
+adminRouter.post("/addPromoCode", adminController.addPromoCode)
 adminRouter.post("/updatePromoCode", checkAdminAuth, adminController.updatePromoCode)
 adminRouter.get("/fetchPromoCode", checkAdminAuth, adminController.fetchPromoCode)
 adminRouter.post("/deletePromoCode", checkAdminAuth, adminController.deletePromoCode)
@@ -51,6 +51,7 @@ adminRouter.post("/resendOtp", adminController.resendOtp)
 adminRouter.post("/verifyotp", adminController.verifyotp)
 adminRouter.post("/setPassword",  adminController.setPassword)
 adminRouter.get("/adminfetchAllPlaces",  adminController.fetchAllPlaces)
+// adminRouter.get("/deleteUser",  adminController.deleteUser)
 
 
 
@@ -88,7 +89,7 @@ adminRouter.delete("/deleteTourPrice", checkAdminAuth, adminController.deleteTou
 // Admin Dashboard api's Not live yet
 adminRouter.get('/dashboard/totalCustomer', checkAdminAuth,adminController.getTotalCustomerAndUserPerMonth);
 adminRouter.get('/dashboard/totalAppDownload', checkAdminAuth, adminController.getTotalAppDownloadUser);
-adminRouter.get('/dashboard/feebackStar', adminController.feedbackStar);
+adminRouter.get('/dashboard/feebackStar',checkAdminAuth, adminController.feedbackStar);
 adminRouter.get('/dashboard/totalSale', checkAdminAuth, adminController.totalSaleAndPerMonthDetail);
 
 

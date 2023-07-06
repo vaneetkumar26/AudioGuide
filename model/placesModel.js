@@ -29,10 +29,8 @@ const PlacesSchema = new mongoose.Schema({
     },
    autoPlay:{
     type:Boolean,
-    default:false
+    // default:false
    }
-
-
 }, { timestamps: true })
 
 const places = mongoose.model("places", PlacesSchema);

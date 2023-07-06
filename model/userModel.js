@@ -2,7 +2,8 @@ const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
     token: {
-        type: String
+        type: String,
+        default:"token13123e123e"
     },
     autoPlay:{
         type:Boolean,

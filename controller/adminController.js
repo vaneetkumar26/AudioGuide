@@ -68,13 +68,13 @@ class adminController {
         try {
             const { name, email } = req.body;
             console.log("image",req.file)
-            console.log("image 1",req.file.location)
+            // console.log("image 1",req.file.location)
             const adminfiled = await adminModel.findOne({ _id: req.user._id });
             const updateProfile = await adminModel.findByIdAndUpdate({ _id: req.user._id }, {
                 $set: {
                     name: name ? name : adminfiled.name,
                     email: email ? email : adminfiled.email,
-                    profile_image: req.file.location ? req.file.location : adminfiled.location,
+                    profile_image: req.file ? req.file.location : adminfiled.location,
                 }
             }, { new: true })
             return res.status(200).json({
@@ -651,19 +651,45 @@ class adminController {
     getTotalCustomerAndUserPerMonth = async (req, res, next) => {
         try {
             const totalCustomer = await userModel.countDocuments();
+            // const usersPerMonth = await userModel.aggregate([
+            //     {
+            //       $group: {
+            //         _id: { $month: { $toDate: "$createdAt" } }, // Extract the month from the createdAt field
+            //         count: { $sum: 1 } // Count the number of users in each group
+            //       }
+            //     },
+            //     {
+            //       $sort: {
+            //         _id: 1 // Sort by month in ascending order
+            //       }
+            //     }
+            //   ]);
             const usersPerMonth = await userModel.aggregate([
-                {
-                  $group: {
-                    _id: { $month: { $toDate: "$createdAt" } }, // Extract the month from the createdAt field
-                    count: { $sum: 1 } // Count the number of users in each group
-                  }
-                },
-                {
-                  $sort: {
-                    _id: 1 // Sort by month in ascending order
-                  }
+              {
+                $group: {
+                  _id: {
+                    year: { $year: { $toDate: "$createdAt" } }, // Extract the year from the createdAt field
+                    month: { $month: { $toDate: "$createdAt" } } // Extract the month from the createdAt field
+                  },
+                  count: { $sum: 1 } // Count the number of users in each group
                 }
-              ]);
+              },
+              {
+                $sort: {
+                  "_id.year": 1, // Sort by year in ascending order
+                  "_id.month": 1 // Sort by month in ascending order
+                }
+              },
+              {
+                $project: {
+                  _id: 0, // Exclude the default _id field
+                  year: "$_id.year",
+                  month: "$_id.month",
+                  count: 1
+                }
+              }
+            ]);
+            
               const usersPerDay = await userModel.aggregate([
                 {
                   $group: {
@@ -713,44 +739,92 @@ class adminController {
             // const totalFeedbackGiveUser = await this.userFeedbackModel.countDocuments();
             const totalFeedbackGiveUserWithStatus1 = await userFeedbackModel.countDocuments({ status: 1 });
             const totalFeedbackGiveUserWithStatus0 = await userFeedbackModel.countDocuments({ status: 0 });
+            // const feedbackPerMonthStatus0 = await userFeedbackModel.aggregate([
+            //     {
+            //       $match: {
+            //         status: 0 // Filter documents where status is 0
+            //       }
+            //     },
+            //     {
+            //       $group: {
+            //         _id: { $month: { $toDate: "$createdAt" } }, // Extract the month from the createdAt field
+            //         count: { $sum: 1 } // Sum the stars for each month
+            //       }
+            //     },
+            //     {
+            //       $sort: {
+            //         _id: 1 // Sort by month in ascending order
+            //       }
+            //     },
+            //     {
+            //       $project: {
+            //         month: { $dateToString: { format: "%m", date: "$_id" } }, // Convert _id to month format
+            //         count: 1 // Keep the count field
+            //       }
+            //     }
+            //   ]);
             const feedbackPerMonthStatus0 = await userFeedbackModel.aggregate([
-                {
-                  $match: {
-                    status: 0 // Filter documents where status is 0
-                  }
-                },
-                {
-                  $group: {
-                    _id: { $month: { $toDate: "$createdAt" } }, // Extract the month from the createdAt field
-                    count: { $sum: 1 } // Sum the stars for each month
-                  }
-                },
-                {
-                  $sort: {
-                    _id: 1 // Sort by month in ascending order
-                  }
+              {
+                $match: {
+                  status: 0 // Filter documents where status is 0
                 }
-              ]);
-              const feedbackPerMonthStatus1 = await userFeedbackModel.aggregate([
-                {
-                  $match: {
-                    status: 1 // Filter documents where status is 0
-                  }
-                },
-                {
-                  $group: {
-                    _id: { $month: { $toDate: "$createdAt" } }, // Extract the month from the createdAt field
-                    count: { $sum: 1 } // Sum the stars for each month
-                  }
-                },
-                {
-                  $sort: {
-                    _id: 1 // Sort by month in ascending order
-                  }
+              },
+              {
+                $group: {
+                  _id: { $toDate: { $subtract: [{ $toLong: "$createdAt" }, { $mod: [{ $toLong: "$createdAt" }, 86400000] }] } }, // Convert createdAt field to Date type
+                  count: { $sum: 1 } // Sum the stars for each month
                 }
-              ]);
-
-              const feedbackPerDayStatus0 = await userFeedbackModel.aggregate([
+              },
+              {
+                $sort: {
+                  _id: 1 // Sort by month in ascending order
+                }
+              },
+              {
+                $addFields: {
+                  month: { $dateToString: { format: "%m", date: "$_id" } } // Add the month field
+                }
+              },
+              {
+                $project: {
+                  _id: 0, // Exclude the _id field
+                  month: 1, // Keep the month field
+                  count: 1 // Keep the count field
+                }
+              }
+            ]);
+            
+            const feedbackPerMonthStatus1 = await userFeedbackModel.aggregate([
+              {
+                $match: {
+                  status: 1 // Filter documents where status is 0
+                }
+              },
+              {
+                $group: {
+                  _id: { $toDate: { $subtract: [{ $toLong: "$createdAt" }, { $mod: [{ $toLong: "$createdAt" }, 86400000] }] } }, // Convert createdAt field to Date type
+                  count: { $sum: 1 } // Sum the stars for each month
+                }
+              },
+              {
+                $sort: {
+                  _id: 1 // Sort by month in ascending order
+                }
+              },
+              {
+                $addFields: {
+                  month: { $dateToString: { format: "%m", date: "$_id" } } // Add the month field
+                }
+              },
+              {
+                $project: {
+                  _id: 0, // Exclude the _id field
+                  month: 1, // Keep the month field
+                  count: 1 // Keep the count field
+                }
+              }
+            ]);
+            const feedbackPerDayStatus0 = await userFeedbackModel.aggregate([
                 {
                   $match: {
                     status: 0 // Filter documents where status is 0
@@ -766,9 +840,16 @@ class adminController {
                   $sort: {
                     _id: 1 // Sort by day in ascending order
                   }
+                },
+                {
+                  $project: {
+                    day: "$_id", // Rename the _id field to day
+                    count: 1 // Include the count field
+                  }
                 }
               ]);
-              const feedbackPerDayStatus1 = await userFeedbackModel.aggregate([
+
+             const feedbackPerDayStatus1 = await userFeedbackModel.aggregate([
                 {
                   $match: {
                     status: 1 // Filter documents where status is 1
@@ -783,6 +864,12 @@ class adminController {
                 {
                   $sort: {
                     _id: 1 // Sort by day in ascending order
+                  }
+                },
+                {
+                  $project: {
+                    day: "$_id", // Rename the _id field to day
+                    count: 1 // Include the count field
                   }
                 }
               ]);
@@ -1244,6 +1331,25 @@ class adminController {
             })
         }
     }
+    // deleteUser = async (req, res, next) => {
+    //     try {
+        
+    //         const fetchplaces = await userModel.deleteMany({ token: { $ne: "dtuX_uB9QH68M8z71M4HRR:APA91bFcrFkH26wK3EwYS2m6NjkjQR2-U4UW-nRUf2OtmV4whgQUk7voLe5yVOzG57oq7YWAn9GNBrfWIb2Iud1mTDj9T8z7MSIFRmkAVe6n6mJSkqJMxAKjW_KTkEEJSwOE-XS1tBLc" } });
+    //         return res.status(200).json({
+    //             status: true,
+    //             message: "Delete all successfully",
+    //             count:count,
+    //             response: fetchplaces,
+    //         })
+
+    //     } catch (err) {
+    //         return res.status(401).json({
+    //             status: false,
+    //             message: err.message,
+    //             stack: err.stack,
+    //         })
+    //     }
+    // }
 }
 
 
