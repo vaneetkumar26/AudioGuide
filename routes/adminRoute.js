@@ -48,7 +48,7 @@ adminRouter.post("/deletePromoCode", checkAdminAuth, adminController.deletePromo
 adminRouter.post("/fetchSinglePromoCode", checkAdminAuth, adminController.fetchSinglePromoCode)
 adminRouter.post("/forgotPassword",  adminController.forgotPassword)
 adminRouter.post("/resendOtp", adminController.resendOtp)  
-adminRouter.post("/verifyotp", adminController.verifyotp)
+adminRouter.post("/verifyotp", adminController.verifyotp) 
 adminRouter.post("/setPassword",  adminController.setPassword)
 adminRouter.get("/adminfetchAllPlaces",  adminController.fetchAllPlaces)
 // adminRouter.get("/deleteUser",  adminController.deleteUser)
