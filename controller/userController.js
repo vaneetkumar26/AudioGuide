@@ -606,6 +606,7 @@ class userController {
             const token=req.body.token;
             // const token="abcersdfasfdsfdsfadsfrewr123453";
             console.log("This is token",token)
+            
             const pay=await tourBuyModel.find().select("price");
             console.log("object",pay[0].price)
             let amounts=parseFloat(pay[0].price).toFixed(2);
