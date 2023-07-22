@@ -13,8 +13,23 @@ const UserSchema = new mongoose.Schema({
         type:String,
         enum: ["Paid", "PromoCode","none"],
         default: "none",
-       }
-
+       },
+       fragement: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "places",
+        },
+      ],
+      fragmentData: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "places",
+        },
+      ],
+     count:{
+      type:Number,
+      default:0
+    }
 }, { timestamps: true })
 
 const user = mongoose.model("user", UserSchema);

@@ -30,7 +30,7 @@ upload = multer({
 //  Admin  login & update profile & change password Routes    //
 //****************************************************************************************************************************/
 adminRouter.post("/adminLogin", adminController.adminLogin);
-adminRouter.post("/updateAdminProfile", checkAdminAuth, upload.single("file"), adminController.updateAdminProfile);
+adminRouter.post("/updateAdminProfile", upload.single("file"), adminController.updateAdminProfile);
 adminRouter.post("/changeAdminPassword", checkAdminAuth, adminController.changeAdminPassword)
 adminRouter.get("/fetchAdminProfile", checkAdminAuth, adminController.fetchAdminProfile)
 
@@ -93,9 +93,13 @@ adminRouter.get('/dashboard/feebackStar',checkAdminAuth, adminController.feedbac
 adminRouter.get('/dashboard/totalSale', checkAdminAuth, adminController.totalSaleAndPerMonthDetail);
 
 
-adminRouter.get('/feedback', checkAdminAuth, adminController.fragementFeedback);
+adminRouter.get('/feedback', adminController.fragementFeedback);
 adminRouter.get('/feedbackFavorite', checkAdminAuth, adminController.fragementFavourite);
 
 
+
+
+
+adminRouter.post("/AddPlacesImage", upload.single("file"), adminController.AddPlacesImage)
 
 module.exports = adminRouter;

@@ -5,7 +5,9 @@ const PlacesSchema = new mongoose.Schema({
     image: {
         type: String,
     },
-
+    greenImage:{
+        type:String
+    },
     fragment: {
         type: String,
     },
@@ -23,11 +25,15 @@ const PlacesSchema = new mongoose.Schema({
     latitude: {
         type: Number,
     },
-
+                            
     longitude: {
         type: Number,
     },
    autoPlay:{
+    type:Boolean,
+    // default:false
+   },
+   isPlayed:{
     type:Boolean,
     // default:false
    }

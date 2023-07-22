@@ -35,7 +35,8 @@ const expirePromoCode = async (req, res, next) => {
     promoCodes.forEach(async (promoCode) => {
         const createdAt = new Date(promoCode.createdAt);
         const expirationDate = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000); // Add 24 hours to createdAt
-        if (currentDate >= expirationDate&& promoCode.promoCode !== "FEEDBACK") {
+        // console.log("object feedback",promoCode._id.toString())
+        if (currentDate >= expirationDate&& promoCode._id.toString() !== "64a3b929a2ce583c61c3df3d") {
             const promoCodeexpire = await promoCodeModel.findByIdAndDelete({ _id: promoCode._id });
             console.log(`Coupon doesnt exists or expired`);
             // Promo code has expired

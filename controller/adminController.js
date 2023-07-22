@@ -69,18 +69,18 @@ class adminController {
             const { name, email } = req.body;
             console.log("image",req.file)
             // console.log("image 1",req.file.location)
-            const adminfiled = await adminModel.findOne({ _id: req.user._id });
-            const updateProfile = await adminModel.findByIdAndUpdate({ _id: req.user._id }, {
-                $set: {
-                    name: name ? name : adminfiled.name,
-                    email: email ? email : adminfiled.email,
-                    profile_image: req.file ? req.file.location : adminfiled.location,
-                }
-            }, { new: true })
+            // const adminfiled = await adminModel.findOne({ _id: req.user._id });
+            // const updateProfile = await adminModel.findByIdAndUpdate({ _id: req.user._id }, {
+            //     $set: {
+            //         name: name ? name : adminfiled.name,
+            //         email: email ? email : adminfiled.email,
+            //         profile_image: req.file ? req.file.location : adminfiled.location,
+            //     }
+            // }, { new: true })
             return res.status(200).json({
                 status: true,
                 message: "Admin profile updated successfully",
-                Response: updateProfile,
+                Response: true,
             })
         } catch (err) {
             return res.status(401).json({
@@ -186,6 +186,7 @@ class adminController {
     //****************************************************************************************************************************/
     fetchCarouselImage = async (req, res, next) => {
         try {
+          
           const { limit, skip } = req.query;
            let skips=req.query.skip?req.query.skip:0;
            let limits=req.query.limit?req.query.limit:10;
@@ -436,9 +437,9 @@ class adminController {
             const addplaces = await placesModel.create({
                 title: title,
                 description: description,
-                fragment: req.files.fragment[0].location,
-                image: req.files.image[0].location,
-                marqueeimage: req.files.marqueeimage[0].location,
+                fragment: req.files.fragment[0].location?req.files.fragment[0].location:"",
+                image: req.files.image[0].location?req.files.image[0].location:"",
+                marqueeimage: req.files.marqueeimage[0].location?req.files.marqueeimage[0].location:"",
                 latitude: latitude,
                 longitude: longitude,
             })
@@ -1350,7 +1351,31 @@ class adminController {
     //         })
     //     }
     // }
+
+
+    AddPlacesImage = async (req, res, next) => {
+      try {
+        const updateResult = await placesModel.updateMany({}, { $set: { greenImage: req.file.location } });
+
+          return res.status(200).json({
+              status: true,
+              message: "Places add successfully",
+              updateResult:updateResult
+
+          })
+      } catch (err) {
+          return res.status(401).json({
+              status: false,
+              message: err.message,
+              stack: err.stack,
+          })
+      }
+  }
+
 }
+
+
+
 
 
 
