@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const dbConnect =  async(req,res) =>{
     try{
         mongoose.set("strictQuery", false);
-        mongoose.connect("mongodb+srv://adminuser:G8EDXyNmN4BwdBbn@audioguidecluster.5mvfdhx.mongodb.net/")
+        mongoose.connect(process.env.MONGO_URL);
         console.log("Db connected")
 
     }catch(err){

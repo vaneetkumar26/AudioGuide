@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const dotenv = require("dotenv")
@@ -10,9 +11,7 @@ const promoCodeModel = require("./model/promoCodeModel");
 const cron = require("node-cron");
 const moment = require("moment")
 
-
-dotenv.config();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 8000;
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 bodyParser.json(['options'])

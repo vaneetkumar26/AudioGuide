@@ -13,8 +13,7 @@ userRoute.post("/ratingAdd" , userController.addRating)
 userRoute.put("/autoPlay" , userController.autoPlayUpdateStatus)
 userRoute.post("/addUser" , userController.registerUser)
 userRoute.post("/getUser" , userController.getUser)
-userRoute.get("/payPayment" , userController.payment)
-
+userRoute.post("/payPayment" , userController.payment)
 userRoute.get("/paymentSuccess", async (req, res) => {
     try {
       const { token } = req.query;
