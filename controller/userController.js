@@ -378,10 +378,7 @@ class userController {
         return res.status(200).json({
           status: true,
           message: "Update",
-          response: {
-            'placedata':'place data is not available',
-            isPlayed: isPlayed,
-          },
+          response: true,
         });
       }else{
         return res.status(200).json({
