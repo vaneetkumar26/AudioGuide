@@ -323,31 +323,41 @@ class userController {
       const place = await placesModel.count();
       const placeData = await placesModel.findOne({ _id });
 
-      console.log("test");
+      console.log("test1", user);
+      console.log("place", place);
+      console.log("placedata", placeData);
       let d = false;
+
       if (!user) {
         // If user does not exist, create a new user with the fragement array containing the new _id
+        console.log("test2");
         const newUser = new userModel({
           token: token,
           fragement: [_id],
           fragmentData: [_id],
           count: 1,
         });
+
         await newUser.save();
       } else {
         // If the user exists, check if the _id already exists in the fragement array
+        console.log("exist");
         const index = user.fragement.indexOf(_id);
+        console.log("index", index);
         if (index !== -1) {
           // If the _id is already present, remove it from the fragement array
           user.fragement.splice(index, 1);
+
           user.count -= 1;
           d = true;
         } else {
           // If the _id is not already present, add it to the fragement array
+         
           user.fragement.push(_id);
 
           // Check if _id is already present in the fragmentData array before adding it
           if (!user.fragmentData.includes(_id)) {
+            
             user.fragmentData.push(_id);
           }
           if (user.count != place) {
@@ -359,16 +369,31 @@ class userController {
       }
 
       // Check if _id is present in the fragement array and set isPlayed accordingly
-      const isPlayed = user ? user.fragement.includes(_id) : false;
+      // console.log('user',user);
+      // console.log('user',user.fragement.includes(_id));
 
-      return res.status(200).json({
-        status: true,
-        message: "Update",
-        response: {
-          ...placeData.toObject(),
-          isPlayed: isPlayed,
-        },
-      });
+      const isPlayed = user ? user.fragement.includes(_id) : false;
+     
+      if(placeData==null){
+        return res.status(200).json({
+          status: true,
+          message: "Update",
+          response: {
+            'placedata':'place data is not available',
+            isPlayed: isPlayed,
+          },
+        });
+      }else{
+        return res.status(200).json({
+          status: true,
+          message: "Update",
+          response: {
+            ...placeData.toObject(),
+            isPlayed: isPlayed,
+          },
+        });
+      }
+      
     } catch (error) {
       return res.status(500).json({
         status: false,

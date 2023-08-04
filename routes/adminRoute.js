@@ -11,8 +11,8 @@ const { checkAdminAuth } = require("../middleware/adminMiddleware")
 var aws = require("aws-sdk"),
     multerS3 = require("multer-s3");
 aws.config.update({
-    accessKeyId: "AKIAZCOYVSONW4HQPT5E", // AKIA3EMPVBHSQZALZSF5
-    secretAccessKey: "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", // z9RpwN1LpRKrPzCnYhlWGnWO4rrN1NwhxVenWtoT
+    accessKeyId: "AKIAZCOYVSONW4HQPT5E", // AKIA3EMPVBHSQZALZSF5 ||  AKIAZCOYVSONUZCHYKR5
+    secretAccessKey: "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", // z9RpwN1LpRKrPzCnYhlWGnWO4rrN1NwhxVenWtoT ||  rH7yWOU8US44Vxq75gVPtDQZyGxKSxrbhZ38PcTP
     Region: "us-east-2", // us-east-2
 });
 s3 = new aws.S3();

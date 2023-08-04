@@ -14,6 +14,7 @@ const SendOtp=require("../middleware/sendOtp")
 class adminController {
     adminLogin = async (req, res, next) => {
         try {
+          console.log('adminLogin',)
             const { email, password } = req.body;
             if (!email || !password) {
                 return res.status(400).json({
@@ -28,7 +29,7 @@ class adminController {
 
                     throw new Error("Please check your email");
                 }
-
+                  console.log('pass',admin.password);
                 const isMatch = await bcrypt.compare(password, admin.password);
                 if (!isMatch) {
                     return res.status(401).json({
@@ -172,6 +173,7 @@ class adminController {
                 message: "Carousel image add successfully",
             })
         } catch (err) {
+            console.log('addcrouse',err.message);
             return res.status(401).json({
                 status: false,
                 message: err.message,
